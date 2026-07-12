@@ -8,6 +8,10 @@ from src.logger import logger
 
 
 # fmt: off
+class ProjectSettings(BaseModel):
+    workers:                   int
+
+
 class SQLSettings(BaseModel):
     user:                      str
     password:                  str
@@ -54,6 +58,7 @@ class Settings(BaseSettings):
     """Класс со всеми настройками проекта"""
 
     # fmt: off
+    project:        ProjectSettings
     sql:            SQLSettings
     rabbit:         RabbitSettings
     log:            LogSettings
@@ -160,10 +165,10 @@ class Settings(BaseSettings):
         config["sql"]["host"] = web_config["sql"]["host"]
         config["sql"]["port"] = web_config["sql"]["port"]
 
-        config["rabbit"]["user"] = web_config["sql"]["login"]
-        config["rabbit"]["password"] = web_config["sql"]["pass"]
-        config["rabbit"]["host"] = web_config["sql"]["server"]
-        config["rabbit"]["port"] = web_config["sql"]["port"]
+        config["rabbit"]["user"] = web_config["rabbit_mq"]["login"]
+        config["rabbit"]["password"] = web_config["rabbit_mq"]["pass"]
+        config["rabbit"]["host"] = web_config["rabbit_mq"]["server"]
+        config["rabbit"]["port"] = web_config["rabbit_mq"]["port"]
 
     @staticmethod
     def from_files(config_path: str, web_config_path: str) -> "Settings":

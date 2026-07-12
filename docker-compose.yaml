@@ -1,0 +1,18 @@
+networks:
+  NETWORK:
+    external: true
+
+services:
+  auth_consumer:
+    build: ./
+    container_name: auth_consumer
+    restart: always
+    networks:
+      - NETWORK
+    volumes:
+      - /edcurve/webconf/:/edcurve/webconf/
+    logging:
+        options:
+            max-size: '10m'
+            max-file: '3'
+        driver: json-file

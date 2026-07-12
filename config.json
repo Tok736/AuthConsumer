@@ -1,4 +1,7 @@
 {
+    "project": {
+        "workers": 4
+    },
     "log": {
         "level": "INFO",
         "console_output": false,

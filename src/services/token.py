@@ -1,10 +1,3 @@
-"""JWT issuance / verification and RSA key management.
-
-The private key is loaded once from a mounted secret file. The public key is
-derived from it and exposed as PEM and as a JWKS document so other services
-can verify access-token signatures without sharing secrets.
-"""
-
 import base64
 import hashlib
 import uuid
@@ -14,8 +7,6 @@ import jwt
 from cryptography.hazmat.primitives import serialization
 
 from src.config import settings
-
-from ..exceptions import InvalidToken
 
 
 def _b64url_uint(value: int) -> str:
@@ -33,21 +24,15 @@ class TokenService:
             serialization.Encoding.DER,
             serialization.PublicFormat.SubjectPublicKeyInfo,
         )
-        # Stable, deterministic key id derived from the public key.
-        self._kid = base64.urlsafe_b64encode(hashlib.sha256(public_der).digest()).decode().rstrip("=")[:16]
-        self._public_pem = self._public_key.public_bytes(
+        self.kid = base64.urlsafe_b64encode(hashlib.sha256(public_der).digest()).decode().rstrip("=")[:16]
+        self.public_pem = self._public_key.public_bytes(
             serialization.Encoding.PEM,
             serialization.PublicFormat.SubjectPublicKeyInfo,
         ).decode()
 
-    # --- public key exposure ---------------------------------------------
-    @property
-    def kid(self) -> str:
-        return self._kid
-
     @property
     def public_key_pem(self) -> str:
-        return self._public_pem
+        return self.public_pem
 
     def jwks(self) -> dict:
         numbers = self._public_key.public_numbers()
@@ -57,15 +42,14 @@ class TokenService:
                     "kty": "RSA",
                     "use": "sig",
                     "alg": settings.auth.jwt_algorithm,
-                    "kid": self._kid,
+                    "kid": self.kid,
                     "n": _b64url_uint(numbers.n),
                     "e": _b64url_uint(numbers.e),
                 }
             ]
         }
 
-    # --- issuing ----------------------------------------------------------
-    def create_access_token(self, user_id: uuid.UUID) -> tuple[str, int]:
+    def create_access_token(self, user_id: int) -> tuple[str, int]:
         ttl = settings.auth.access_token_ttl
         now = datetime.now(UTC)
         payload = {
@@ -81,11 +65,11 @@ class TokenService:
             payload,
             self._private_key,
             algorithm=settings.auth.jwt_algorithm,
-            headers={"kid": self._kid},
+            headers={"kid": self.kid},
         )
         return token, ttl
 
-    def create_refresh_token(self, user_id: uuid.UUID, family_id: uuid.UUID) -> tuple[str, uuid.UUID, datetime]:
+    def create_refresh_token(self, user_id: int, family_id: uuid.UUID) -> tuple[str, uuid.UUID, datetime]:
         ttl = settings.auth.refresh_token_ttl
         now = datetime.now(UTC)
         expires_at = now + timedelta(seconds=ttl)
@@ -104,11 +88,10 @@ class TokenService:
             payload,
             self._private_key,
             algorithm=settings.auth.jwt_algorithm,
-            headers={"kid": self._kid},
+            headers={"kid": self.kid},
         )
         return token, jti, expires_at
 
-    # --- verifying --------------------------------------------------------
     def decode_refresh(self, token: str) -> dict:
         try:
             payload = jwt.decode(

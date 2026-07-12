@@ -1,13 +1,8 @@
-"""Password hashing.
-
-Uses passlib's ``bcrypt_sha256`` scheme rather than plain ``bcrypt``: it
-pre-hashes with SHA-256 so passwords longer than bcrypt's 72-byte limit are
-not silently truncated. The stored hash is still bcrypt under the hood.
-"""
-
 from functools import lru_cache
 
 from passlib.context import CryptContext
+
+from src.config import settings
 
 
 class PasswordHasher:
@@ -27,4 +22,4 @@ class PasswordHasher:
 
 @lru_cache
 def get_password_hasher() -> PasswordHasher:
-    return PasswordHasher(get_settings().bcrypt_rounds)
+    return PasswordHasher(settings.auth.bcrypt_rounds)
