@@ -38,4 +38,22 @@ class TokenPair(BaseModel):
     expires_at:      int
 
 
+class JWK(BaseModel):
+    kty:             str = "RSA"
+    use:             str = "sig"
+    alg:             str
+    kid:             str
+    n:               str
+    e:               str
+
+
+class JWKS(BaseModel):
+    keys:            list[JWK]
+
+
+class PublicKeyResponse(BaseModel):
+    public_key:      str
+    algorithm:       str
+    kid:             str
+
 # fmt: on

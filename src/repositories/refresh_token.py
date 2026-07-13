@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import update
+from sqlalchemy import insert, select, update
 
 from src.base_repository import BaseRepository
 from src.models.refresh_token import RefreshToken
@@ -9,7 +9,7 @@ from src.models.refresh_token import RefreshToken
 
 class RefreshTokenRepository(BaseRepository):
     async def get(self, jti: uuid.UUID) -> RefreshToken | None:
-        return await self.session.get(RefreshToken, jti)
+        return await self.session.scalar(select(RefreshToken).where(RefreshToken.jti == jti))
 
     async def create(
         self,
@@ -19,15 +19,14 @@ class RefreshTokenRepository(BaseRepository):
         family_id: uuid.UUID,
         expires_at: datetime,
     ) -> RefreshToken:
-        token = RefreshToken(
-            jti=jti,
-            user_id=user_id,
-            family_id=family_id,
-            expires_at=expires_at,
-        )
-        self.session.add(token)
-        await self.session.flush()
-        return token
+        values = {
+            RefreshToken.jti: jti,
+            RefreshToken.user_id: user_id,
+            RefreshToken.family_id: family_id,
+            RefreshToken.expires_at: expires_at,
+        }
+        statement = insert(RefreshToken).values(values).returning(RefreshToken)
+        return await self.session.scalar(statement)
 
     async def revoke(self, jti: uuid.UUID, replaced_by: uuid.UUID | None = None) -> None:
         await self.session.execute(

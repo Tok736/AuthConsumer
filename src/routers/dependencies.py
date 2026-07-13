@@ -1,5 +1,3 @@
-from functools import lru_cache
-
 from faststream import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -7,15 +5,7 @@ from src.database import get_session
 from src.repositories.refresh_token import RefreshTokenRepository
 from src.repositories.social_account import SocialAccountRepository
 from src.repositories.user import UserRepository
-from src.services.auth import AuthService
-from src.services.password import get_password_hasher
-from src.services.token import TokenService
-
-
-@lru_cache
-def get_token_service() -> TokenService:
-    """Singleton: RSA ключи загружаются один раз"""
-    return TokenService()
+from src.services import AuthService, get_password_hasher, get_token_service
 
 
 def get_auth_service(

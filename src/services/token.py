@@ -2,12 +2,15 @@ import base64
 import hashlib
 import uuid
 from datetime import UTC, datetime, timedelta
+from functools import lru_cache
 
 import jwt
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey, RSAPublicKey
 
 from src.config import settings
 from src.exceptions import InvalidToken
+from src.schemas.auth import JWK, JWKS
 
 
 def b64url_uint(value: int) -> str:
@@ -18,15 +21,15 @@ def b64url_uint(value: int) -> str:
 class TokenService:
     def __init__(self):
         with open("/edcurve/secrets/rsa/private.pem", "rb") as fh:
-            self._private_key = serialization.load_pem_private_key(fh.read(), password=None)
-        self._public_key = self._private_key.public_key()
+            self.private_key: RSAPrivateKey = serialization.load_pem_private_key(fh.read(), password=None)  # pyright: ignore[reportAttributeAccessIssue]
+        self.public_key: RSAPublicKey = self.private_key.public_key()  # pyright: ignore[reportAttributeAccessIssue]
 
-        public_der = self._public_key.public_bytes(
+        public_der = self.public_key.public_bytes(
             serialization.Encoding.DER,
             serialization.PublicFormat.SubjectPublicKeyInfo,
         )
         self.kid = base64.urlsafe_b64encode(hashlib.sha256(public_der).digest()).decode().rstrip("=")[:16]
-        self.public_pem = self._public_key.public_bytes(
+        self.public_pem = self.public_key.public_bytes(
             serialization.Encoding.PEM,
             serialization.PublicFormat.SubjectPublicKeyInfo,
         ).decode()
@@ -35,20 +38,18 @@ class TokenService:
     def public_key_pem(self) -> str:
         return self.public_pem
 
-    def jwks(self) -> dict:
-        numbers = self._public_key.public_numbers()
-        return {
-            "keys": [
-                {
-                    "kty": "RSA",
-                    "use": "sig",
-                    "alg": settings.auth.jwt_algorithm,
-                    "kid": self.kid,
-                    "n": b64url_uint(numbers.n),
-                    "e": b64url_uint(numbers.e),
-                }
+    def jwks(self) -> JWKS:
+        numbers = self.public_key.public_numbers()
+        return JWKS(
+            keys=[
+                JWK(
+                    alg=settings.auth.jwt_algorithm,
+                    kid=self.kid,
+                    n=b64url_uint(numbers.n),
+                    e=b64url_uint(numbers.e),
+                )
             ]
-        }
+        )
 
     def create_access_token(self, user_id: int) -> tuple[str, int]:
         now = datetime.now(UTC)
@@ -64,7 +65,7 @@ class TokenService:
         }
         token = jwt.encode(
             payload,
-            self._private_key,
+            self.private_key,
             algorithm=settings.auth.jwt_algorithm,
             headers={"kid": self.kid},
         )
@@ -88,7 +89,7 @@ class TokenService:
         }
         token = jwt.encode(
             payload,
-            self._private_key,
+            self.private_key,
             algorithm=settings.auth.jwt_algorithm,
             headers={"kid": self.kid},
         )
@@ -98,7 +99,7 @@ class TokenService:
         try:
             payload = jwt.decode(
                 token,
-                self._public_key,
+                self.public_key,
                 algorithms=[settings.auth.jwt_algorithm],
                 audience=settings.auth.jwt_audience,
                 issuer=settings.auth.jwt_issuer,
@@ -109,3 +110,9 @@ class TokenService:
         if payload.get("type") != "refresh":
             raise InvalidToken("Not a refresh token")
         return payload
+
+
+@lru_cache
+def get_token_service() -> TokenService:
+    """Singleton: RSA ключи загружаются один раз"""
+    return TokenService()

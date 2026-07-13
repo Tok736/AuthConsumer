@@ -18,7 +18,7 @@ def generate_rsa_keys(path: str):
             private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
                 format=serialization.PrivateFormat.PKCS8,
-                encryption_algorithm=serialization.NoEncryption(),  # или BestAvailableEncryption(b"passphrase")
+                encryption_algorithm=serialization.NoEncryption(),
             )
         )
 
