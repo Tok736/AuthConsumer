@@ -2,15 +2,12 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import update
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.base_repository import BaseRepository
 from src.models.refresh_token import RefreshToken
 
 
-class RefreshTokenRepository:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
+class RefreshTokenRepository(BaseRepository):
     async def get(self, jti: uuid.UUID) -> RefreshToken | None:
         return await self.session.get(RefreshToken, jti)
 

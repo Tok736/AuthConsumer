@@ -1,10 +1,11 @@
 from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.base_repository import BaseRepository
 from src.models.user import User
 
 
-class UserRepository:
+class UserRepository(BaseRepository):
     def __init__(self, session: AsyncSession):
         self.session = session
 

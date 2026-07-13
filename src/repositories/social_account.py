@@ -1,13 +1,10 @@
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.base_repository import BaseRepository
 from src.models.social_account import UserSocialAccount
 
 
-class SocialAccountRepository:
-    def __init__(self, session: AsyncSession):
-        self.session = session
-
+class SocialAccountRepository(BaseRepository):
     async def get_by_provider(self, provider: str, provider_user_id: str) -> UserSocialAccount | None:
         result = await self.session.execute(
             select(UserSocialAccount).where(

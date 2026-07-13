@@ -19,8 +19,13 @@ class BaseRepository:
 
     session: AsyncSession
 
+    def __init__(self, session: AsyncSession | None = None) -> None:
+        if session is None:
+            self.session = async_session_maker()  # type: ignore
+        else:
+            self.session = session
+
     async def __aenter__(self) -> Self:
-        self.session = async_session_maker()  # type: ignore
         return self
 
     async def __aexit__(self, *_: Any) -> None:
