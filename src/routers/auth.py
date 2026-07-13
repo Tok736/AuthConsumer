@@ -4,7 +4,7 @@ from faststream.rabbit import RabbitRouter
 from src.base_schemas import Response
 from src.config import settings
 from src.rabbit import queue
-from src.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, RevokeRequest, UserRead
+from src.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, RevokeRequest, TokenPair
 from src.services.auth import AuthService
 from src.services.token import TokenService
 
@@ -17,7 +17,7 @@ router = RabbitRouter()
 async def register(
     request: RegisterRequest,
     service: AuthService = Depends(get_auth_service),
-) -> Response[UserRead]:
+) -> Response[TokenPair]:
     return await service.register(request)
 
 
@@ -25,7 +25,7 @@ async def register(
 async def login(
     request: LoginRequest,
     service: AuthService = Depends(get_auth_service),
-) -> Response:
+) -> Response[TokenPair]:
     return await service.login(request)
 
 

@@ -17,8 +17,6 @@
         "bcrypt_rounds": 12,
         "jwt_algorithm": "RS256",
         "jwt_issuer": "auth-service",
-        "jwt_audience": "internal-services",
-        "access_token_ttl": 900,
-        "refresh_token_ttl": 604800
+        "jwt_audience": "internal-services"
     }
 }

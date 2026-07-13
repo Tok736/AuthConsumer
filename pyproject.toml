@@ -59,6 +59,8 @@ ignore = [
     "W191",  # indentation contains tabs
     "E221",
     "E271",
+    "UP047",
+    "UP046",
 ]
 
 [tool.ruff.lint.per-file-ignores]

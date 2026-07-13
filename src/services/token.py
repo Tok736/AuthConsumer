@@ -7,6 +7,7 @@ import jwt
 from cryptography.hazmat.primitives import serialization
 
 from src.config import settings
+from src.exceptions import InvalidToken
 
 
 def b64url_uint(value: int) -> str:
@@ -50,15 +51,15 @@ class TokenService:
         }
 
     def create_access_token(self, user_id: int) -> tuple[str, int]:
-        ttl = settings.auth.access_token_ttl
         now = datetime.now(UTC)
+        exp = now + timedelta(seconds=settings.auth.access_token_ttl)
         payload = {
             "sub": str(user_id),
             "type": "access",
             "iss": settings.auth.jwt_issuer,
             "aud": settings.auth.jwt_audience,
             "iat": now,
-            "exp": now + timedelta(seconds=ttl),
+            "exp": exp,
             "jti": str(uuid.uuid4()),
         }
         token = jwt.encode(
@@ -67,7 +68,8 @@ class TokenService:
             algorithm=settings.auth.jwt_algorithm,
             headers={"kid": self.kid},
         )
-        return token, ttl
+        expired_at = int(exp.timestamp())
+        return token, expired_at
 
     def create_refresh_token(self, user_id: int, family_id: uuid.UUID) -> tuple[str, uuid.UUID, datetime]:
         ttl = settings.auth.refresh_token_ttl

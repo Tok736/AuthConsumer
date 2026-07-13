@@ -170,6 +170,9 @@ class Settings(BaseSettings):
         config["rabbit"]["host"] = web_config["rabbit_mq"]["server"]
         config["rabbit"]["port"] = web_config["rabbit_mq"]["port"]
 
+        config["auth"]["access_token_ttl"] = web_config["auth"]["access_token_ttl"]
+        config["auth"]["refresh_token_ttl"] = web_config["auth"]["refresh_token_ttl"]
+
     @staticmethod
     def from_files(config_path: str, web_config_path: str) -> "Settings":
         """Загружает конфиг из конфиг файла"""

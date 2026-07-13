@@ -11,7 +11,7 @@ class RefreshTokenRepository:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get(self, jti: int) -> RefreshToken | None:
+    async def get(self, jti: uuid.UUID) -> RefreshToken | None:
         return await self.session.get(RefreshToken, jti)
 
     async def create(
@@ -19,7 +19,7 @@ class RefreshTokenRepository:
         *,
         jti: uuid.UUID,
         user_id: int,
-        family_id: int,
+        family_id: uuid.UUID,
         expires_at: datetime,
     ) -> RefreshToken:
         token = RefreshToken(
@@ -32,12 +32,12 @@ class RefreshTokenRepository:
         await self.session.flush()
         return token
 
-    async def revoke(self, jti: int, replaced_by: int | None = None) -> None:
+    async def revoke(self, jti: uuid.UUID, replaced_by: uuid.UUID | None = None) -> None:
         await self.session.execute(
             update(RefreshToken).where(RefreshToken.jti == jti).values(revoked=True, replaced_by=replaced_by)
         )
 
-    async def revoke_family(self, family_id: int) -> None:
+    async def revoke_family(self, family_id: uuid.UUID) -> None:
         await self.session.execute(
             update(RefreshToken)
             .where(RefreshToken.family_id == family_id, RefreshToken.revoked.is_(False))
