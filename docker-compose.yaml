@@ -10,7 +10,8 @@ services:
     networks:
       - NETWORK
     volumes:
-      - /edcurve/webconf/:/edcurve/webconf/
+      - /edcurve/webconf/:/edcurve/webconf/:ro
+      - /edcurve/secrets/rsa/:/edcurve/secrets/rsa/:ro
     logging:
         options:
             max-size: '10m'

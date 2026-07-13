@@ -9,14 +9,14 @@ from cryptography.hazmat.primitives import serialization
 from src.config import settings
 
 
-def _b64url_uint(value: int) -> str:
+def b64url_uint(value: int) -> str:
     raw = value.to_bytes((value.bit_length() + 7) // 8, "big")
     return base64.urlsafe_b64encode(raw).decode().rstrip("=")
 
 
 class TokenService:
     def __init__(self):
-        with open(settings.rsa_private_key_path, "rb") as fh:
+        with open("/edcurve/secrets/rsa/private.pem", "rb") as fh:
             self._private_key = serialization.load_pem_private_key(fh.read(), password=None)
         self._public_key = self._private_key.public_key()
 
@@ -43,8 +43,8 @@ class TokenService:
                     "use": "sig",
                     "alg": settings.auth.jwt_algorithm,
                     "kid": self.kid,
-                    "n": _b64url_uint(numbers.n),
-                    "e": _b64url_uint(numbers.e),
+                    "n": b64url_uint(numbers.n),
+                    "e": b64url_uint(numbers.e),
                 }
             ]
         }

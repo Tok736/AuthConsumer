@@ -1,15 +1,19 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, SecretStr
+
+from src.enums import BasicRole
 
 
 # fmt: off
 class RegisterRequest(BaseModel):
     email:           EmailStr
-    password:        str = Field(min_length=8, max_length=128)
+    password:        SecretStr = Field(min_length=8, max_length=128)
+    nickname:        str
+    basic_role:      BasicRole
 
 
 class LoginRequest(BaseModel):
     email:           EmailStr
-    password:        str = Field(min_length=1, max_length=128)
+    password:        SecretStr = Field(min_length=1, max_length=128)
 
 
 class RefreshRequest(BaseModel):

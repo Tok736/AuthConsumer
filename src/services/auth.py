@@ -51,7 +51,7 @@ class AuthService:
 
         user = await self.users.create(
             email=request.email,
-            hashed_password=self.hasher.hash(request.password),
+            hashed_password=self.hasher.hash(request.password.get_secret_value()),
         )
         data = UserRead(id=user.id, email=user.email, is_active=user.is_active)
         return Response(status=201, message="Created", data=data)

@@ -1,4 +1,4 @@
-from sqlalchemy import select
+from sqlalchemy import insert, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.user import User
@@ -15,7 +15,11 @@ class UserRepository:
         return await self.session.scalar(select(User).where(User.email == email))
 
     async def create(self, *, email: str, hashed_password: str) -> User:
-        user = User(email=email, hashed_password=hashed_password)
-        self.session.add(user)
-        await self.session.flush()
-        return user
+        values = {
+            User.email: email,
+            User.hashed_password: hashed_password,
+        }
+        statement = insert(User).values(values).returning(User)
+        result = await self.session.scalar(statement)
+        await self.session.commit()
+        return result

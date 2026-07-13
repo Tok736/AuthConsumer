@@ -9,6 +9,7 @@ import psycopg2
 from psycopg2 import sql
 
 from src.config import settings
+from src.logger import logger
 
 
 def create_database() -> None:
@@ -27,6 +28,9 @@ def create_database() -> None:
             cur.execute("SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s", (settings.sql.database,))
             if not cur.fetchone():
                 cur.execute(sql.SQL("CREATE DATABASE {}").format(sql.Identifier(settings.sql.database)))
+                logger.info(f"[create_database] Created database {settings.sql.database}")
+            else:
+                logger.info(f"[create_database] Database {settings.sql.database} is already created")
 
 
 if __name__ == "__main__":
