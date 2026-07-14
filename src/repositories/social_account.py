@@ -19,4 +19,6 @@ class SocialAccountRepository(BaseRepository):
             UserSocialAccount.provider_user_id: provider_user_id,
         }
         statement = insert(UserSocialAccount).values(values).returning(UserSocialAccount)
-        return await self.session.scalar(statement)
+        account = await self.session.scalar(statement)
+        await self.session.commit()
+        return account

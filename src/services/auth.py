@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.base_schemas import Response, err
 from src.exceptions import InvalidToken
+from src.logger import logger
 from src.repositories.refresh_token import RefreshTokenRepository
 from src.repositories.social_account import SocialAccountRepository
 from src.repositories.user import UserRepository
@@ -57,13 +58,20 @@ class AuthService:
         return Response(data=await self.issue_pair(user.id))
 
     async def login(self, request: LoginRequest) -> Response[TokenPair]:
-        user = await self.users.get_by_email(request.email)
-        if (
-            user is None
-            or user.hashed_password is None
-            or not self.hasher.verify(request.password.get_secret_value(), user.hashed_password)
-        ):
+        email = request.email
+        user = await self.users.get_by_email(email)
+        if user is None:
+            logger.debug(f"[AuthService] No such user with email {email}. Login failed")
             return err(401, "Invalid email or password")
+
+        if user.hashed_password is None:
+            logger.debug(f"[AuthService] User with email {email} has no hashed password. Login failed")
+            return err(401, "Invalid email or password")
+
+        if not self.hasher.verify(request.password.get_secret_value(), user.hashed_password):
+            logger.debug(f"[AuthService] User with email {email} password is not verified. Login failed")
+            return err(401, "Invalid email or password")
+
         if not user.is_active:
             return err(403, "User is inactive")
         return Response(data=await self.issue_pair(user.id))
@@ -77,6 +85,7 @@ class AuthService:
         jti = uuid.UUID(payload["jti"])
         stored = await self.refresh_tokens.get(jti)
         if stored is None:
+            logger.debug("[AuthService] There is no stored refresh token")
             return err(401, "Invalid or expired token")
 
         if stored.revoked:
@@ -84,6 +93,7 @@ class AuthService:
             return err(401, "Refresh token reuse detected; session revoked")
 
         if stored.expires_at <= datetime.now(UTC):
+            logger.debug("[AuthService] Token expired")
             return err(401, "Invalid or expired token")
 
         access, access_expires_at = self.tokens.create_access_token(stored.user_id)

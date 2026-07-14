@@ -17,6 +17,6 @@ class UserRepository(BaseRepository):
             User.hashed_password: hashed_password,
         }
         statement = insert(User).values(values).returning(User)
-        result = await self.session.scalar(statement)
+        user = await self.session.scalar(statement)
         await self.session.commit()
-        return result
+        return user

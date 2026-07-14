@@ -26,12 +26,15 @@ class RefreshTokenRepository(BaseRepository):
             RefreshToken.expires_at: expires_at,
         }
         statement = insert(RefreshToken).values(values).returning(RefreshToken)
-        return await self.session.scalar(statement)
+        refresh_token = await self.session.scalar(statement)
+        await self.session.commit()
+        return refresh_token
 
     async def revoke(self, jti: uuid.UUID, replaced_by: uuid.UUID | None = None) -> None:
         await self.session.execute(
             update(RefreshToken).where(RefreshToken.jti == jti).values(revoked=True, replaced_by=replaced_by)
         )
+        await self.session.commit()
 
     async def revoke_family(self, family_id: uuid.UUID) -> None:
         await self.session.execute(
@@ -39,6 +42,7 @@ class RefreshTokenRepository(BaseRepository):
             .where(RefreshToken.family_id == family_id, RefreshToken.revoked.is_(False))
             .values(revoked=True)
         )
+        await self.session.commit()
 
     async def revoke_all_for_user(self, user_id: int) -> None:
         await self.session.execute(
@@ -46,3 +50,4 @@ class RefreshTokenRepository(BaseRepository):
             .where(RefreshToken.user_id == user_id, RefreshToken.revoked.is_(False))
             .values(revoked=True)
         )
+        await self.session.commit()
