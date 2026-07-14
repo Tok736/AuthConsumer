@@ -3,9 +3,9 @@ from datetime import UTC, datetime
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.base_schemas import Response, err
 from src.exceptions import InvalidToken
 from src.logger import logger
+from src.rabbit import Response, err
 from src.repositories.refresh_token import RefreshTokenRepository
 from src.repositories.social_account import SocialAccountRepository
 from src.repositories.user import UserRepository

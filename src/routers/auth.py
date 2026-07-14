@@ -1,9 +1,8 @@
 from faststream import Depends
 from faststream.rabbit import RabbitRouter
 
-from src.base_schemas import Response
 from src.config import settings
-from src.rabbit import queue
+from src.rabbit import Response, queue
 from src.schemas.auth import (
     JWKS,
     LoginRequest,

@@ -178,10 +178,14 @@ T = TypeVar("T", bound=BaseModel)
 
 
 # fmt: off
-class RabbitRPCResponse(BaseModel, Generic[T]):
+class Response(BaseModel, Generic[T]):
     """Классический формат для ответов от rabbit RPC сервисов"""
 
     status:   int      = 200
     message:  str      = "Ok"
     data:     T | None = None
 # fmt: on
+
+
+def err(status: int, message: str) -> Response:
+    return Response(status=status, message=message, data=None)
