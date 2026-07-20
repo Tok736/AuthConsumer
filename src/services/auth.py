@@ -70,7 +70,7 @@ class AuthService:
             return err(401, "Invalid email or password")
 
         if not self.hasher.verify(request.password.get_secret_value(), user.hashed_password):
-            logger.debug(f"[AuthService] User with email {email} password check failed. Login failed")
+            logger.debug(f"[AuthService] User with email {email} password check failed")
             return err(401, "Invalid email or password")
 
         if not user.is_active:
