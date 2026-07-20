@@ -90,5 +90,5 @@ def fill_or_create_config(source: str, target: str) -> None:
 if __name__ == "__main__":
     fill_or_create_config(
         source="config.json",
-        target="/edcurve/webconf/user_service/config.json",
+        target="/edcurve/webconf/auth_consumer/config.json",
     )
