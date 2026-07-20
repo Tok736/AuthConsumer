@@ -13,7 +13,7 @@ class UserRepository(BaseRepository):
     async def get_by_email(self, email: str) -> User | None:
         return await self.session.scalar(select(User).where(User.email == email))
 
-    async def create(self, *, user_id: UUID, email: str, hashed_password: str) -> User:
+    async def create(self, *, user_id: UUID, email: str, hashed_password: str, commit: bool = True) -> User:
         values = {
             User.id: user_id,
             User.email: email,
@@ -21,5 +21,6 @@ class UserRepository(BaseRepository):
         }
         statement = insert(User).values(values).returning(User)
         user = await self.session.scalar(statement)
-        await self.session.commit()
+        if commit:
+            await self.session.commit()
         return user

@@ -9,6 +9,8 @@ class RegisterRequest(BaseModel):
     password:        SecretStr = Field(min_length=8, max_length=128)
     nickname:        str
     basic_role:      BasicRole
+    timezone:        str
+    locale:          str
 
 
 class LoginRequest(BaseModel):

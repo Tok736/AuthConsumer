@@ -2,6 +2,7 @@ from faststream import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.database import get_session
+from src.external.user_service import ExternalUserService
 from src.repositories.refresh_token import RefreshTokenRepository
 from src.repositories.social_account import SocialAccountRepository
 from src.repositories.user import UserRepository
@@ -18,4 +19,5 @@ def get_auth_service(
         social_accounts=SocialAccountRepository(session),
         hasher=get_password_hasher(),
         tokens=get_token_service(),
+        external_user_service=ExternalUserService(),
     )

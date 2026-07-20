@@ -1,4 +1,4 @@
-from faststream import Depends
+from faststream import Context, Depends
 from faststream.rabbit import RabbitRouter
 
 from src.config import settings
@@ -22,9 +22,10 @@ router = RabbitRouter()
 @router.subscriber(queue.post("register"))
 async def register(
     request: RegisterRequest,
+    correlation_id: str = Context("message.correlation_id"),
     service: AuthService = Depends(get_auth_service),
 ) -> Response[TokenPair]:
-    return await service.register(request)
+    return await service.register(request, correlation_id)
 
 
 @router.subscriber(queue.post("login"))

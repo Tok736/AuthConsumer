@@ -4,6 +4,7 @@ from uuid import UUID, uuid7
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.exceptions import InvalidToken
+from src.external.user_service import ExternalUserService, UserCreate
 from src.logger import logger
 from src.rabbit import Response, err
 from src.repositories.refresh_token import RefreshTokenRepository
@@ -31,6 +32,7 @@ class AuthService:
         social_accounts: SocialAccountRepository,
         hasher: PasswordHasher,
         tokens: TokenService,
+        external_user_service: ExternalUserService,
     ):
         self.session = session
         self.users = users
@@ -38,6 +40,7 @@ class AuthService:
         self.social = social_accounts
         self.hasher = hasher
         self.tokens = tokens
+        self.external_user_service = external_user_service
 
     async def issue_pair(self, user_id: UUID, family_id: UUID | None = None) -> TokenPair:
         family_id = family_id or uuid7()
@@ -46,7 +49,7 @@ class AuthService:
         await self.refresh_tokens.create(jti=jti, user_id=user_id, family_id=family_id, expires_at=refresh_expires_at)
         return TokenPair(access_token=access, refresh_token=refresh, expires_at=access_expires_at)
 
-    async def register(self, request: RegisterRequest) -> Response[TokenPair]:
+    async def register(self, request: RegisterRequest, correlation_id: str) -> Response[TokenPair]:
         if await self.users.get_by_email(request.email):
             return err(409, "Email already registered")
 
@@ -54,8 +57,25 @@ class AuthService:
             user_id=uuid7(),
             email=request.email,
             hashed_password=self.hasher.hash(request.password.get_secret_value()),
+            commit=False,
         )
 
+        user_created = await self.external_user_service.create_user(
+            UserCreate(
+                user_id=user.id,
+                basic_role=request.basic_role,
+                email=user.email,
+                nickname=request.nickname,
+                timezone=request.timezone,
+                locale=request.locale,
+            ),
+            correlation_id=correlation_id,
+        )
+
+        if user_created.status >= 300:
+            return user_created
+
+        await self.session.commit()
         return Response(data=await self.issue_pair(user.id))
 
     async def login(self, request: LoginRequest) -> Response[TokenPair]:
