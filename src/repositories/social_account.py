@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from sqlalchemy import insert, select
 
 from src.base_repository import BaseRepository
@@ -12,7 +14,7 @@ class SocialAccountRepository(BaseRepository):
         )
         return await self.session.scalar(statement)
 
-    async def create(self, *, user_id: int, provider: str, provider_user_id: str) -> UserSocialAccount:
+    async def create(self, *, user_id: UUID, provider: str, provider_user_id: str) -> UserSocialAccount:
         values = {
             UserSocialAccount.user_id: user_id,
             UserSocialAccount.provider: provider,

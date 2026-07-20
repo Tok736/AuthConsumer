@@ -1,5 +1,5 @@
-import uuid
 from datetime import UTC, datetime
+from uuid import UUID, uuid7
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -39,8 +39,8 @@ class AuthService:
         self.hasher = hasher
         self.tokens = tokens
 
-    async def issue_pair(self, user_id: int, family_id: uuid.UUID | None = None) -> TokenPair:
-        family_id = family_id or uuid.uuid4()
+    async def issue_pair(self, user_id: UUID, family_id: UUID | None = None) -> TokenPair:
+        family_id = family_id or uuid7()
         access, access_expires_at = self.tokens.create_access_token(user_id)
         refresh, jti, refresh_expires_at = self.tokens.create_refresh_token(user_id, family_id)
         await self.refresh_tokens.create(jti=jti, user_id=user_id, family_id=family_id, expires_at=refresh_expires_at)
@@ -51,6 +51,7 @@ class AuthService:
             return err(409, "Email already registered")
 
         user = await self.users.create(
+            user_id=uuid7(),
             email=request.email,
             hashed_password=self.hasher.hash(request.password.get_secret_value()),
         )
@@ -82,7 +83,7 @@ class AuthService:
         except InvalidToken as exc:
             return err(exc.status, exc.message)
 
-        jti = uuid.UUID(payload["jti"])
+        jti = UUID(payload["jti"])
         stored = await self.refresh_tokens.get(jti)
         if stored is None:
             logger.debug("[AuthService] There is no stored refresh token")
@@ -119,7 +120,7 @@ class AuthService:
         except InvalidToken:
             return Response(message="Token revoked")
 
-        jti = uuid.UUID(payload["jti"])
+        jti = UUID(payload["jti"])
         stored = await self.refresh_tokens.get(jti)
         if stored is None:
             return Response(message="Token revoked")

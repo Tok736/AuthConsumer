@@ -14,7 +14,7 @@ engine = create_async_engine(settings.sql.sqlalchemy_url)
 async_session_maker = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)  # type: ignore[call-overload]
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
+async def get_session() -> AsyncGenerator[AsyncSession]:
     """Функция для выдачи асинхронного соединения с базой данных"""
 
     async with async_session_maker() as session:  # pyright: ignore[reportGeneralTypeIssues]

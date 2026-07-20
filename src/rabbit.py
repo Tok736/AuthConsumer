@@ -125,10 +125,12 @@ class RabbitRPCManager:
         *,
         timeout: float = 60,
         ttl: float = 3600,
+        correlation_id: str | None = None,
     ) -> T_response | None:
 
         callback_queue = await self.get_callback_queue()
-        correlation_id = uuid4().hex
+        if correlation_id is None:
+            correlation_id = uuid4().hex
         future: asyncio.Future[T_response] = asyncio.get_running_loop().create_future()
         self.pending[correlation_id] = Pending(future, response_schema)
 
@@ -163,10 +165,11 @@ async def rpc_call(
     *,
     timeout: float = 60,
     ttl: float = 3600,
+    correlation_id: str | None = None,
 ) -> T_response | None:
     """Выполнить RPC-запрос по RabbitMQ"""
 
-    result = await manager.call(request, queue, response_schema, timeout=timeout, ttl=ttl)
+    result = await manager.call(request, queue, response_schema, timeout=timeout, ttl=ttl, correlation_id=correlation_id)
 
     if result is not None:
         logger.debug(f"[rpc_call] Answer from rpc call to {queue}:\n{result.model_dump()}")

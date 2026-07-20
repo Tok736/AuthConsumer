@@ -1,5 +1,6 @@
 #!/bin/bash
 
+python3 src/scripts/create_config.py
 python3 src/scripts/create_database.py
 alembic upgrade head
 

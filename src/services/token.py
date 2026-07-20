@@ -1,8 +1,8 @@
 import base64
 import hashlib
-import uuid
 from datetime import UTC, datetime, timedelta
 from functools import lru_cache
+from uuid import UUID, uuid7
 
 import jwt
 from cryptography.hazmat.primitives import serialization
@@ -51,7 +51,7 @@ class TokenService:
             ]
         )
 
-    def create_access_token(self, user_id: int) -> tuple[str, int]:
+    def create_access_token(self, user_id: UUID) -> tuple[str, int]:
         now = datetime.now(UTC)
         exp = now + timedelta(seconds=settings.auth.access_token_ttl)
         payload = {
@@ -61,7 +61,7 @@ class TokenService:
             "aud": settings.auth.jwt_audience,
             "iat": now,
             "exp": exp,
-            "jti": str(uuid.uuid4()),
+            "jti": str(uuid7()),
         }
         token = jwt.encode(
             payload,
@@ -72,11 +72,11 @@ class TokenService:
         expired_at = int(exp.timestamp())
         return token, expired_at
 
-    def create_refresh_token(self, user_id: int, family_id: uuid.UUID) -> tuple[str, uuid.UUID, datetime]:
+    def create_refresh_token(self, user_id: UUID, family_id: UUID) -> tuple[str, UUID, datetime]:
         ttl = settings.auth.refresh_token_ttl
         now = datetime.now(UTC)
         expires_at = now + timedelta(seconds=ttl)
-        jti = uuid.uuid4()
+        jti = uuid7()
         payload = {
             "sub": str(user_id),
             "type": "refresh",

@@ -34,12 +34,12 @@ def upgrade() -> None:
     op.create_index(op.f("ix_user_email"), "user", ["email"], unique=True)
     op.create_table(
         "refresh_token",
-        sa.Column("jti", sa.UUID(), nullable=False),
+        sa.Column("jti", sa.UUID(as_uuid=True), nullable=False),
         sa.Column("user_id", sa.Integer(), nullable=False),
-        sa.Column("family_id", sa.UUID(), nullable=False),
+        sa.Column("family_id", sa.UUID(as_uuid=True), nullable=False),
         sa.Column("expires_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("revoked", sa.Boolean(), server_default="false", nullable=False),
-        sa.Column("replaced_by", sa.UUID(), nullable=True),
+        sa.Column("replaced_by", sa.UUID(as_uuid=True), nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),

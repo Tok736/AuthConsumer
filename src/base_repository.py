@@ -32,7 +32,7 @@ class BaseRepository:
         await self.session.close()
 
     @classmethod
-    async def dependency(cls) -> AsyncGenerator[Self, None]:
+    async def dependency(cls) -> AsyncGenerator[Self]:
         """
         Функция для использования с Depends. Синтаксис использования:
 
