@@ -1,0 +1,20 @@
+name: edcurve
+
+networks:
+  NETWORK:
+    external: true
+
+services:
+  auth_consumer:
+    build: ./
+    restart: always
+    networks:
+      - NETWORK
+    volumes:
+      - /edcurve/webconf/:/edcurve/webconf/
+      - /edcurve/secrets/rsa/:/edcurve/secrets/rsa/:ro
+    logging:
+        options:
+            max-size: '10m'
+            max-file: '3'
+        driver: json-file

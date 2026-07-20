@@ -1,0 +1,22 @@
+{
+    "project": {
+        "workers": 4
+    },
+    "log": {
+        "level": "INFO",
+        "console_output": false,
+        "exceptions": false
+    },
+    "sql": {
+        "database": "auth"
+    },
+    "rabbit": {
+        "message_ttl": 600000
+    },
+    "auth": {
+        "bcrypt_rounds": 12,
+        "jwt_algorithm": "RS256",
+        "jwt_issuer": "auth-service",
+        "jwt_audience": "internal-services"
+    }
+}
