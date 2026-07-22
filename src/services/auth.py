@@ -10,13 +10,7 @@ from src.rabbit import Response, err
 from src.repositories.refresh_token import RefreshTokenRepository
 from src.repositories.social_account import SocialAccountRepository
 from src.repositories.user import UserRepository
-from src.schemas.auth import (
-    LoginRequest,
-    RefreshRequest,
-    RegisterRequest,
-    RevokeRequest,
-    TokenPair,
-)
+from src.schemas.auth import LoginRequest, RefreshRequest, RegisterRequest, RevokeRequest, SoftDeleteRequest, TokenPair
 
 from .password import PasswordHasher
 from .token import TokenService
@@ -64,7 +58,7 @@ class AuthService:
             UserCreate(
                 user_id=user.id,
                 basic_role=request.basic_role,
-                email=user.email,
+                email=user.email,  # type: ignore
                 nickname=request.nickname,
                 timezone=request.timezone,
                 locale=request.locale,
@@ -97,9 +91,9 @@ class AuthService:
             return err(403, "User is inactive")
         return Response(data=await self.issue_pair(user.id))
 
-    async def refresh(self, req: RefreshRequest) -> Response[TokenPair]:
+    async def refresh(self, request: RefreshRequest) -> Response[TokenPair]:
         try:
-            payload = self.tokens.decode_refresh(req.refresh_token)
+            payload = self.tokens.decode_refresh(request.refresh_token)
         except InvalidToken as exc:
             return err(exc.status, exc.message)
 
@@ -134,9 +128,9 @@ class AuthService:
         )
         return Response(data=pair)
 
-    async def revoke(self, req: RevokeRequest) -> Response:
+    async def revoke(self, request: RevokeRequest) -> Response:
         try:
-            payload = self.tokens.decode_refresh(req.refresh_token)
+            payload = self.tokens.decode_refresh(request.refresh_token)
         except InvalidToken:
             return Response(message="Token revoked")
 
@@ -145,8 +139,14 @@ class AuthService:
         if stored is None:
             return Response(message="Token revoked")
 
-        if req.all_sessions:
+        if request.all_sessions:
             await self.refresh_tokens.revoke_all_for_user(stored.user_id)
         else:
             await self.refresh_tokens.revoke_family(stored.family_id)
         return Response(message="Token revoked")
+
+    async def soft_delete_user(self, request: SoftDeleteRequest) -> Response:
+        await self.users.soft_delete_user(request.user_id)
+        await self.refresh_tokens.revoke_all_for_user(request.user_id)
+
+        return Response()

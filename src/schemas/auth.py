@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, EmailStr, Field, SecretStr
 
 from src.enums import BasicRole
@@ -57,5 +59,9 @@ class PublicKeyResponse(BaseModel):
     public_key:      str
     algorithm:       str
     kid:             str
+
+
+class SoftDeleteRequest(BaseModel):
+    user_id:         UUID
 
 # fmt: on

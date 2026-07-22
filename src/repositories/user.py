@@ -1,6 +1,7 @@
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 
 from src.base_repository import BaseRepository
 from src.models.user import User
@@ -24,3 +25,11 @@ class UserRepository(BaseRepository):
         if commit:
             await self.session.commit()
         return user
+
+    async def soft_delete_user(self, user_id: UUID) -> None:
+        values = {
+            User.email: None,
+            User.deleted_at: datetime.now(),
+            User.is_active: False,
+        }
+        await self.session.execute(update(User).values(values).where(User.id == user_id))

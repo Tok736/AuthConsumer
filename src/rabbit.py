@@ -188,6 +188,11 @@ class Response(BaseModel, Generic[T]):
     status:   int      = 200
     message:  str      = "Ok"
     data:     T | None = None
+
+    @property
+    def ok(self) -> bool:
+        return self.status < 300
+
 # fmt: on
 
 
@@ -201,6 +206,7 @@ exception_middleware = ExceptionMiddleware()
 @exception_middleware.add_handler(AppException, publish=True)
 async def handle_app_exception(e: AppException) -> Response:
     """Хендлер для отлова AppException, которые пробрасываются при вызовах функций"""
+    logger.info(f"[handle_app_exceptions] {e.status}: {e.message}")
     return err(e.status, e.message)
 
 
