@@ -1,4 +1,4 @@
-from faststream import Depends
+from faststream import Context, Depends
 from faststream.rabbit import RabbitRouter
 
 from src.config import settings
@@ -10,6 +10,7 @@ from src.schemas.auth import (
     RefreshRequest,
     RegisterRequest,
     RevokeRequest,
+    SoftDeleteRequest,
     TokenPair,
 )
 from src.services import AuthService, TokenService
@@ -19,12 +20,14 @@ from .dependencies import get_auth_service, get_token_service
 router = RabbitRouter()
 
 
+# --- Frontend эндпоинты, доступны фронту ---
 @router.subscriber(queue.post("register"))
 async def register(
     request: RegisterRequest,
     service: AuthService = Depends(get_auth_service),
+    correlation_id: str = Context("message.correlation_id"),
 ) -> Response[TokenPair]:
-    return await service.register(request)
+    return await service.register(request, correlation_id)
 
 
 @router.subscriber(queue.post("login"))
@@ -51,15 +54,14 @@ async def revoke(
     return await service.revoke(request)
 
 
+# --- Backend эндпоинты, доступны микросервисам ---
 @router.subscriber(queue.get("jwks"))
 async def jwks(tokens: TokenService = Depends(get_token_service)) -> Response[JWKS]:
     return Response(data=tokens.jwks())
 
 
 @router.subscriber(queue.get("public_key"))
-async def public_key(
-    tokens: TokenService = Depends(get_token_service),
-) -> Response[PublicKeyResponse]:
+async def public_key(tokens: TokenService = Depends(get_token_service)) -> Response[PublicKeyResponse]:
     return Response(
         data=PublicKeyResponse(
             public_key=tokens.public_key_pem,
@@ -67,3 +69,11 @@ async def public_key(
             kid=tokens.kid,
         )
     )
+
+
+@router.subscriber(queue.delete("user"))
+async def soft_delete_user(
+    request: SoftDeleteRequest,
+    service: AuthService = Depends(get_auth_service),
+) -> Response:
+    return await service.soft_delete_user(request)

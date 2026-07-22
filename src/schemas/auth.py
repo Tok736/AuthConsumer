@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel, EmailStr, Field, SecretStr
 
 from src.enums import BasicRole
@@ -9,6 +11,8 @@ class RegisterRequest(BaseModel):
     password:        SecretStr = Field(min_length=8, max_length=128)
     nickname:        str
     basic_role:      BasicRole
+    timezone:        str
+    locale:          str
 
 
 class LoginRequest(BaseModel):
@@ -55,5 +59,9 @@ class PublicKeyResponse(BaseModel):
     public_key:      str
     algorithm:       str
     kid:             str
+
+
+class SoftDeleteRequest(BaseModel):
+    user_id:         UUID
 
 # fmt: on

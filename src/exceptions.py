@@ -13,3 +13,8 @@ class AppException(Exception):
 class InvalidToken(AppException):
     status = 401
     message = "Invalid or expired token"
+
+
+class UserServiceUnavailable(AppException):
+    status = 500
+    message = "User service unavailable"
